@@ -1,0 +1,96 @@
+# Deployment e Service da API.
+# A imagem loja-api:1.0 deve existir no no (docker build -t loja-api:1.0 ./app).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loja-api
+  namespace: n3-gabriel-luiz
+  labels:
+    app: loja-api
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: loja-api
+  template:
+    metadata:
+      labels:
+        app: loja-api
+    spec:
+      containers:
+        - name: api
+          image: loja-api:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: loja-config
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: loja-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loja-secret
+                  key: DB_PASSWORD
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Liveness apenas verifica se o processo HTTP responde.
+          # A dependencia de MySQL/Redis fica na readiness para nao reiniciar
+          # a API quando o banco estiver temporariamente indisponivel.
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loja-api
+  namespace: n3-gabriel-luiz
+  labels:
+    app: loja-api
+spec:
+  type: NodePort
+  selector:
+    app: loja-api
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      nodePort: 30080

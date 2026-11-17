@@ -1,0 +1,7 @@
+# Variaveis de ambiente locais (nunca versionar credenciais)
+.env
+
+# Dependencias e artefatos
+node_modules/
+npm-debug.log*
+*.log

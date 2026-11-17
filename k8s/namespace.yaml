@@ -1,0 +1,7 @@
+# Namespace da atividade N3
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: n3-gabriel-luiz
+  labels:
+    app: loja-n3

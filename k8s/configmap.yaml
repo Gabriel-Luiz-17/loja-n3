@@ -1,0 +1,16 @@
+# Configuracoes nao sensiveis usadas pela API e pelo MySQL.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loja-config
+  namespace: n3-gabriel-luiz
+  labels:
+    app: loja-n3
+data:
+  PORT: "3000"
+  CACHE_TTL: "30"
+  DB_HOST: "mysql"
+  DB_PORT: "3306"
+  DB_NAME: "lojadb"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
